@@ -7,6 +7,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "Folder.h"
+#include "variables.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ float angle_x;
 float angle_y;
 
 
-strng[] listFiles(const char* cPath)
+void listFiles(const char* cPath)
 {
 	struct dirent * file;
     DIR * stream;
@@ -36,38 +37,52 @@ strng[] listFiles(const char* cPath)
     else
          printf( "! wywołując funkcję opendir(%s) pojawił się błąd otwarcia strumienia dla danej ścieżki, może nie istnieje, lub podano ścieżkę pustą\n", cPath );
 
-	return sNames;
+	//return sNames;
+}
+
+void drawFloor(float width, float length, float alpha)
+{
+    // Begin drawing the floor
+    glBegin(GL_QUADS);
+         
+    glColor4f(1.0f, 1.0f, 1.0f, alpha);
+    glNormal3f(0.0f, 1.0f, 0.0f);    
+    glVertex3f(-width / 2, 0.0f, length / 2);
+    glVertex3f(-width / 2, 0.0f, -length / 2);
+    glVertex3f(width / 2, 0.0f, -length / 2);
+    glVertex3f(width / 2, 0.0f, length / 2);
+     
+    glEnd();
+}
+
+void drawFolder()
+{
+	glPushMatrix();
+
+	glTranslatef(2.0f,0.0f,5.0f);
+	glRotatef(angle_y, 0.0f,1.0f,0.0f);
+
+	glVertexPointer(3,GL_FLOAT,0,folderVertices);
+	glColorPointer(3,GL_FLOAT,0,folderColours);	
+	glDrawArrays(GL_TRIANGLE_FAN, 0, folderVertexCount);
+
 }
 
 void displayFrame(void) {
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-	glm::mat4 V=glm::lookAt(
-		glm::vec3(0.0f,2.0f,-15.0f),
-		glm::vec3(0.0f,0.0f,0.0f),
-		glm::vec3(0.0f,1.0f,0.0f));
-	
-	glm::mat4 P=glm::perspective(50.0f, 1.0f, 1.0f, 50.0f);
-	
+			
 	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(glm::value_ptr(P));
-	glMatrixMode(GL_MODELVIEW);
-	
-		
-	glm::mat4 M=glm::mat4(1.0f);
-	glm::mat4 R,T;
-	T = glm::translate(M, glm::vec3(2.0f,0.0f,5.0f) );
-	R = glm::rotate(M,angle_y,glm::vec3(0.0f,1.0f,0.0f));
-	//M=glm::rotate(M,angle_x,glm::vec3(1.0f,0.0f,0.0f));
-	M = R * T;
-	glLoadMatrixf(glm::value_ptr(V*M));
+	//glLoadMatrixf(glm::value_ptr(P));
+	glMatrixMode(GL_MODELVIEW);		
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
-	glVertexPointer(3,GL_FLOAT,0,folderVertices);
-	glColorPointer(3,GL_FLOAT,0,folderColours);	
-	glDrawArrays(GL_TRIANGLE_FAN, 0, folderVertexCount);
+	
+	glEnable(GL_BLEND);
+	drawFloor(15.0f, 15.0f, 1.0f);
+	glDisable(GL_BLEND);
+	
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);	
 	
@@ -123,13 +138,12 @@ void keyUp(int c, int x, int y) {
   }
 }
 
-
 int main(int argc, char* argv[]) 
 {
-	string sNames[100] = listFiles( argv[1] );
+	//string sNames[100] = listFiles( argv[1] );
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(800,800);
+	glutInitWindowSize(WINDOW_SIZE, WINDOW_SIZE);
 	glutInitWindowPosition(0,0);
 	glutCreateWindow("Program OpenGL");        
 	glutDisplayFunc(displayFrame);
@@ -145,6 +159,6 @@ int main(int argc, char* argv[])
 	//glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
 
-        glutMainLoop();
-        return 0;
+    glutMainLoop();
+    return 0;
 }

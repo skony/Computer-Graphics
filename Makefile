@@ -2,7 +2,7 @@ LIBS=-lGL -lglut -lGLEW
 CC=g++
 
 SOURCES=main_file.cpp 
-HEADERS=Folder.h
+HEADERS=Folder.h variables.h
 OBJECTS=$(SOURCES:.cpp=.o)
 
 all: main_file
