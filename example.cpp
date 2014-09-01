@@ -1,84 +1,79 @@
 #include <GL/glut.h>
+#include <iostream>
+#include "lib/EasyBMP.h"
+
+#define NUMBER_BMP_TEXTURES 2
+#define SKY_TEXTURE 0
+#define SKY_TEXTURE_SIZE 200
+#define WALL_TEXTURE 1
+#define WALL_TEXTURE_SIZE 200
+
+GLuint textureName[NUMBER_BMP_TEXTURES];
+GLubyte SkyTexture[SKY_TEXTURE_SIZE][SKY_TEXTURE_SIZE][3];
  
 float rotationAngle = 0;
- 
-// Draw the box
-void drawBox(float width, float length, float height) 
-{    
-    glPushMatrix();
-     
-    // Rotate the cube by the specific angle and vector
-    glRotatef(rotationAngle, 1.0f, 1.0f, 1.0f);
-     
-    // Begin drawing the cube
-    glBegin(GL_QUADS);
-     
-    // Top face
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glNormal3f(0.0f, 1.0f, 0.0f);
-    glVertex3f(-width / 2, height / 2, -length / 2);
-    glVertex3f(-width / 2, height / 2, length / 2);
-    glVertex3f(width / 2, height / 2, length / 2);
-    glVertex3f(width / 2, height / 2, -length / 2);
-     
-    // Bottom face
-    glColor3f(0.0f, 1.0f, 0.0f);
-    glNormal3f(0.0f, -1.0f, 0.0f);
-    glVertex3f(-width / 2, -height / 2, -length / 2);
-    glVertex3f(width / 2, -height / 2, -length / 2);
-    glVertex3f(width / 2, -height / 2, length / 2);
-    glVertex3f(-width / 2, -height / 2, length / 2);
-     
-    // Left face
-    glColor3f(0.0f, 0.0f, 1.0f);
-    glNormal3f(-1.0f, 0.0f, 0.0f);    
-    glVertex3f(-width / 2, -height / 2, -length / 2);
-    glVertex3f(-width / 2, -height / 2, length / 2);
-    glVertex3f(-width / 2, height / 2, length / 2);
-    glVertex3f(-width / 2, height / 2, -length / 2);
-     
-    // Right face
-    glColor3f(1.0f, 1.0f, 0.0f);
-    glNormal3f(1.0f, 0.0f, 0.0f);    
-    glVertex3f(width / 2, -height / 2, -length / 2);
-    glVertex3f(width / 2, height / 2, -length / 2);
-    glVertex3f(width / 2, height / 2, length / 2);
-    glVertex3f(width / 2, -height / 2, length / 2);
-     
-    // Front face
-    glColor3f(1.0f, 0.0f, 1.0f);
-    glNormal3f(0.0f, 0.0f, 1.0f);    
-    glVertex3f(-width / 2, -height / 2, length / 2);
-    glVertex3f(width / 2, -height / 2, length / 2);    
-    glVertex3f(width / 2, height / 2, length / 2);    
-    glVertex3f(-width / 2, height / 2, length / 2);
-     
-    // Back face
-    glColor3f(0.0f, 1.0f, 1.0f);
-    glNormal3f(0.0f, 0.0f, -1.0f);
-    glVertex3f(-width / 2, -height / 2, -length / 2);    
-    glVertex3f(-width / 2, height / 2, -length / 2);    
-    glVertex3f(width / 2, height / 2, -length / 2);    
-    glVertex3f(width / 2, -height / 2, -length / 2);
-     
-    glEnd();
-     
-    glPopMatrix();
+GLuint textureId;
+
+void LoadBMPTextures(void)
+{
+    BMP LoadedTexture;
+
+    //Sky Texture
+    LoadedTexture.ReadFromFile("floor.bmp");
+    for(int i = 0; i < SKY_TEXTURE_SIZE; i++)
+    {
+       for(int j = 0; j < SKY_TEXTURE_SIZE; j++)
+       {
+          SkyTexture[i][j][0] = (GLubyte) LoadedTexture(i,j)->Red;
+          SkyTexture[i][j][1] = (GLubyte) LoadedTexture(i,j)->Green;
+          SkyTexture[i][j][2] = (GLubyte) LoadedTexture(i,j)->Blue;
+       }
+    }
 }
- 
+
+void initBMPTextures()
+{
+    LoadBMPTextures();
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(NUMBER_BMP_TEXTURES, textureName);
+
+    //Sky texture
+    glBindTexture(GL_TEXTURE_2D, textureName[SKY_TEXTURE]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, SKY_TEXTURE_SIZE, SKY_TEXTURE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, &SkyTexture[0][0][0]);                             
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    glEnable(GL_TEXTURE_2D);
+}
 // Draw the floor
 void drawFloor(float width, float length, float alpha)
 {
-    // Begin drawing the floor
+    initBMPTextures();
     glBegin(GL_QUADS);
          
-    glColor4f(1.0f, 1.0f, 1.0f, alpha);
-    glNormal3f(0.0f, 1.0f, 0.0f);    
+    glTexCoord2f(1.0f, 1.0f);    
     glVertex3f(-width / 2, 0.0f, length / 2);
+    glTexCoord2f(0.0f, 1.0f);
     glVertex3f(-width / 2, 0.0f, -length / 2);
+    glTexCoord2f(1.0f, 0.0f);
     glVertex3f(width / 2, 0.0f, -length / 2);
+    glTexCoord2f(0.0f, 0.0f);
     glVertex3f(width / 2, 0.0f, length / 2);
      
+    glEnd();
+
+    glDisable( GL_TEXTURE_2D );
+    glPopMatrix();
+}
+
+void drawWalls()
+{
+    glBegin(GL_QUADS);
+
     glEnd();
 }
  
@@ -145,7 +140,7 @@ void drawScene()
     // Draw box
     glPushMatrix();
     glTranslatef(0.0f, 5.0f, 0.0f);
-    drawBox(5.0f, 5.0f, 5.0f);
+    //drawBox(5.0f, 5.0f, 5.0f);
     glPopMatrix();
      
     // Enable the stencil buffer
@@ -159,7 +154,7 @@ void drawScene()
     // Make pixels in the stencil buffer be set to 1 when the stencil test passes
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     // Set all of the pixels covered by the floor to be 1 in the stencil buffer
-    drawFloor(30.0f, 30.f, 1.0f);
+    //drawFloor(30.0f, 30.f, 1.0f);
      
     // Enable drawing colors to the screen
     glColorMask(1, 1, 1, 1); 
@@ -175,7 +170,7 @@ void drawScene()
     glPushMatrix();
     glScalef(1, -1, 1);
     glTranslatef(0, 5.0f, 0);
-    drawBox(5.0f, 5.0f, 5.0f);
+    //drawBox(5.0f, 5.0f, 5.0f);
     glPopMatrix();
      
     // Disable using the stencil buffer
@@ -207,7 +202,7 @@ int main(int argc, char *argv[])
     // Initialize display mode and use stencil
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL);
     // Initialize a Glut window
-    glutInitWindowSize(640, 480);
+    glutInitWindowSize(640, 480);Joanna Krymarys
     // Create glut window
     glutCreateWindow("OpenGL GLUT reflection example");
     // Initialize rendering
