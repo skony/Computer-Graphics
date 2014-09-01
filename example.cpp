@@ -57,6 +57,7 @@ void initBMPTextures()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+    
     glBindTexture(GL_TEXTURE_2D, textureName[WALL_TEXTURE]);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, WALL_TEXTURE_SIZE, WALL_TEXTURE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, &WallTexture[0][0][0]);                              
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -70,9 +71,9 @@ void initBMPTextures()
 void drawFloor(float width, float length, float alpha)
 {
     initBMPTextures();
+    glBindTexture(GL_TEXTURE_2D, textureName[SKY_TEXTURE]);
     glBegin(GL_QUADS);
-        
-    glBindTexture(GL_TEXTURE_2D, textureName[0]); 
+
     glTexCoord2f(1.0f, 1.0f);    
     glVertex3f(-width / 2, 0.0f, length / 2);
     glTexCoord2f(0.0f, 1.0f);
@@ -81,17 +82,45 @@ void drawFloor(float width, float length, float alpha)
     glVertex3f(width / 2, 0.0f, -length / 2);
     glTexCoord2f(0.0f, 0.0f);
     glVertex3f(width / 2, 0.0f, length / 2);
-     
+    
     glEnd();
-
-    glDisable( GL_TEXTURE_2D );
-    glPopMatrix();
 }
 
-void drawWalls()
+void drawWalls(float width, float length, float height)
 {
+    glBindTexture(GL_TEXTURE_2D, textureName[WALL_TEXTURE]);
+    //1st wall
     glBegin(GL_QUADS);
-
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex3f(-width/2, 0, length/2);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex3f(-width/2, height/2, length/2); 
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex3f(-width/2, height/2, -length/2); 
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex3f(-width/2, 0, -length/2); 
+    glEnd();
+    //2nd wall
+    glBegin(GL_QUADS);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex3f(-width/2, 0, -length/2);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex3f(-width/2, height/2, -length/2); 
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex3f(width/2, height/2, -length/2); 
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex3f(width/2, 0, -length/2); 
+    glEnd();
+    //3rd wall
+    glBegin(GL_QUADS);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex3f(width/2, 0, -length/2);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex3f(width/2, height/2, -length/2); 
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex3f(width/2, height/2, length/2); 
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex3f(width/2, 0, length/2); 
     glEnd();
 }
  
@@ -134,7 +163,7 @@ void handleResize(int w, int h)
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, (double)w / (double)h, 1.0, 1000.0);
+    gluPerspective(55.0, (double)w / (double)h, 1.0, 1000.0);
 }
  
 void drawScene() 
@@ -197,6 +226,7 @@ void drawScene()
     // Blend the floor onto the screen
     glEnable(GL_BLEND);    
     drawFloor(30.0f, 30.f, 0.8f);
+    drawWalls(30.0f, 30.0f, 30.0f);
     glDisable(GL_BLEND);
      
     glutSwapBuffers();    
