@@ -10,43 +10,60 @@
 
 GLuint textureName[NUMBER_BMP_TEXTURES];
 GLubyte SkyTexture[SKY_TEXTURE_SIZE][SKY_TEXTURE_SIZE][3];
+GLubyte WallTexture[WALL_TEXTURE_SIZE][WALL_TEXTURE_SIZE][3];
  
 float rotationAngle = 0;
-GLuint textureId;
 
 void LoadBMPTextures(void)
 {
-    BMP LoadedTexture;
+    BMP LoadedTextureFloor, LoadedTextureWall;
 
-    //Sky Texture
-    LoadedTexture.ReadFromFile("floor.bmp");
+    LoadedTextureFloor.ReadFromFile("floor.bmp");
+    LoadedTextureWall.ReadFromFile("wall.bmp");
+
     for(int i = 0; i < SKY_TEXTURE_SIZE; i++)
     {
        for(int j = 0; j < SKY_TEXTURE_SIZE; j++)
        {
-          SkyTexture[i][j][0] = (GLubyte) LoadedTexture(i,j)->Red;
-          SkyTexture[i][j][1] = (GLubyte) LoadedTexture(i,j)->Green;
-          SkyTexture[i][j][2] = (GLubyte) LoadedTexture(i,j)->Blue;
+          SkyTexture[i][j][0] = (GLubyte) LoadedTextureFloor(i,j)->Red;
+          SkyTexture[i][j][1] = (GLubyte) LoadedTextureFloor(i,j)->Green;
+          SkyTexture[i][j][2] = (GLubyte) LoadedTextureFloor(i,j)->Blue;
+       }
+    }
+
+    for(int i = 0; i < WALL_TEXTURE_SIZE; i++)
+    {
+       for(int j = 0; j < WALL_TEXTURE_SIZE; j++)
+       {
+          WallTexture[i][j][0] = (GLubyte) LoadedTextureWall(i,j)->Red;
+          WallTexture[i][j][1] = (GLubyte) LoadedTextureWall(i,j)->Green;
+          WallTexture[i][j][2] = (GLubyte) LoadedTextureWall(i,j)->Blue;
        }
     }
 }
 
 void initBMPTextures()
 {
-    LoadBMPTextures();
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
     glGenTextures(NUMBER_BMP_TEXTURES, textureName);
 
-    //Sky texture
+    LoadBMPTextures();
+
     glBindTexture(GL_TEXTURE_2D, textureName[SKY_TEXTURE]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, SKY_TEXTURE_SIZE, SKY_TEXTURE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, &SkyTexture[0][0][0]);                             
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, SKY_TEXTURE_SIZE, SKY_TEXTURE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, &SkyTexture[0][0][0]);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+    glBindTexture(GL_TEXTURE_2D, textureName[WALL_TEXTURE]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, WALL_TEXTURE_SIZE, WALL_TEXTURE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, &WallTexture[0][0][0]);                              
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_2D);
 }
 // Draw the floor
@@ -54,7 +71,8 @@ void drawFloor(float width, float length, float alpha)
 {
     initBMPTextures();
     glBegin(GL_QUADS);
-         
+        
+    glBindTexture(GL_TEXTURE_2D, textureName[0]); 
     glTexCoord2f(1.0f, 1.0f);    
     glVertex3f(-width / 2, 0.0f, length / 2);
     glTexCoord2f(0.0f, 1.0f);
@@ -202,7 +220,7 @@ int main(int argc, char *argv[])
     // Initialize display mode and use stencil
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL);
     // Initialize a Glut window
-    glutInitWindowSize(640, 480);Joanna Krymarys
+    glutInitWindowSize(640, 480);
     // Create glut window
     glutCreateWindow("OpenGL GLUT reflection example");
     // Initialize rendering
