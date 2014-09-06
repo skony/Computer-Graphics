@@ -1,6 +1,15 @@
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
 #include <GL/glut.h>
+#include "glm/glm.hpp"
 #include <iostream>
 #include "lib/EasyBMP.h"
+#include "objloader.hpp"
+#include "common/shader.hpp"
+#include "common/controls.hpp"
 
 #define NUMBER_BMP_TEXTURES 2
 #define SKY_TEXTURE 0
@@ -11,6 +20,18 @@
 GLuint textureName[NUMBER_BMP_TEXTURES];
 GLubyte SkyTexture[SKY_TEXTURE_SIZE][SKY_TEXTURE_SIZE][3];
 GLubyte WallTexture[WALL_TEXTURE_SIZE][WALL_TEXTURE_SIZE][3];
+
+std::vector< glm::vec3 > vertices;
+std::vector< glm::vec2 > uvs;
+std::vector< glm::vec3 > normals;
+
+GLuint vertexbuffer;
+GLuint uvbuffer;
+
+GLuint vertexPosition_modelspaceID;
+GLuint vertexUVID;
+GLuint programID;
+GLuint MatrixID;
  
 float rotationAngle = 0;
 
@@ -67,6 +88,40 @@ void initBMPTextures()
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_2D);
 }
+
+void drawObjects()
+{
+    // 1rst attribute buffer : vertices
+        glEnableVertexAttribArray(vertexPosition_modelspaceID);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glVertexAttribPointer(
+            vertexPosition_modelspaceID,  // The attribute we want to configure
+            3,                            // size
+            GL_FLOAT,                     // type
+            GL_FALSE,                     // normalized?
+            0,                            // stride
+            (void*)0                      // array buffer offset
+        );
+
+        // 2nd attribute buffer : UVs
+        glEnableVertexAttribArray(vertexUVID);
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+        glVertexAttribPointer(
+            vertexUVID,                   // The attribute we want to configure
+            2,                            // size : U+V => 2
+            GL_FLOAT,                     // type
+            GL_FALSE,                     // normalized?
+            0,                            // stride
+            (void*)0                      // array buffer offset
+        );
+
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
+
+        glDisableVertexAttribArray(vertexPosition_modelspaceID);
+        glDisableVertexAttribArray(vertexUVID);
+
+}
+
 // Draw the floor
 void drawFloor(float width, float length, float alpha)
 {
@@ -156,6 +211,22 @@ void initRendering()
     glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular); 
      
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    programID = LoadShaders( "TransformVertexShader.vertexshader", "TextureFragmentShader.fragmentshader" );
+    vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
+    vertexUVID = glGetAttribLocation(programID, "vertexUV");
+
+    MatrixID = glGetUniformLocation(programID, "MVP");
+
+    bool res = loadOBJ("Rack.obj", vertices, uvs, normals);
+
+    glGenBuffers(1, &vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &uvbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
 }
  
 void handleResize(int w, int h) 
@@ -168,11 +239,20 @@ void handleResize(int w, int h)
  
 void drawScene() 
 {
-    // Clear the stencil buffer
-    glClearStencil(0); 
-    // Clear depth
     glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(programID);
+
+    // Compute the MVP matrix from keyboard and mouse input
+    computeMatricesFromInputs();
+    glm::mat4 ProjectionMatrix = getProjectionMatrix();
+    glm::mat4 ViewMatrix = getViewMatrix();
+    glm::mat4 ModelMatrix = glm::mat4(1.0);
+    glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+    // Send our transformation to the currently bound shader, 
+    // in the "MVP" uniform
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
      
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -183,50 +263,19 @@ void drawScene()
     // Set light position
     GLfloat lightPosition[] = {0.0f, 10.0f, 0.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-     
-    // Draw box
-    glPushMatrix();
-    glTranslatef(0.0f, 5.0f, 0.0f);
-    //drawBox(5.0f, 5.0f, 5.0f);
-    glPopMatrix();
-     
-    // Enable the stencil buffer
-    glEnable(GL_STENCIL_TEST); 
     // Disable drawing colors
     glColorMask(0, 0, 0, 0); 
     // Disable depth testing
-    glDisable(GL_DEPTH_TEST); 
-    // Make the stencil test always pass
-    glStencilFunc(GL_ALWAYS, 1, 1); 
-    // Make pixels in the stencil buffer be set to 1 when the stencil test passes
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    // Set all of the pixels covered by the floor to be 1 in the stencil buffer
-    //drawFloor(30.0f, 30.f, 1.0f);
-     
+    glDisable(GL_DEPTH_TEST);     
     // Enable drawing colors to the screen
     glColorMask(1, 1, 1, 1); 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST); 
-    // Make the stencil test pass only when the pixel is 1 in the stencil buffer
-    glStencilFunc(GL_EQUAL, 1, 1);
-    // Make the stencil buffer not change
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
-     
-    //Draw the cube, reflected vertically, at all pixels where the stencil
-    //buffer is 1
-    glPushMatrix();
-    glScalef(1, -1, 1);
-    glTranslatef(0, 5.0f, 0);
-    //drawBox(5.0f, 5.0f, 5.0f);
-    glPopMatrix();
-     
-    // Disable using the stencil buffer
-    glDisable(GL_STENCIL_TEST); 
-     
     // Blend the floor onto the screen
     glEnable(GL_BLEND);    
     drawFloor(30.0f, 30.f, 0.8f);
     drawWalls(30.0f, 30.0f, 30.0f);
+    //drawObjects();
     glDisable(GL_BLEND);
      
     glutSwapBuffers();    
@@ -253,6 +302,11 @@ int main(int argc, char *argv[])
     glutInitWindowSize(640, 480);
     // Create glut window
     glutCreateWindow("OpenGL GLUT reflection example");
+        // Initialize GLEW
+    if (glewInit() != GLEW_OK) {
+        fprintf(stderr, "Failed to initialize GLEW\n");
+        return -1;
+    }
     // Initialize rendering
     initRendering();
     // Set display function
