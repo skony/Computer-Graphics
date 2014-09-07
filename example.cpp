@@ -7,9 +7,7 @@
 #include "glm/glm.hpp"
 #include <iostream>
 #include "lib/EasyBMP.h"
-#include "objloader.hpp"
-#include "common/shader.hpp"
-#include "common/controls.hpp"
+#include "common/Model_OBJ.hpp"
 
 #define NUMBER_BMP_TEXTURES 2
 #define SKY_TEXTURE 0
@@ -21,17 +19,7 @@ GLuint textureName[NUMBER_BMP_TEXTURES];
 GLubyte SkyTexture[SKY_TEXTURE_SIZE][SKY_TEXTURE_SIZE][3];
 GLubyte WallTexture[WALL_TEXTURE_SIZE][WALL_TEXTURE_SIZE][3];
 
-std::vector< glm::vec3 > vertices;
-std::vector< glm::vec2 > uvs;
-std::vector< glm::vec3 > normals;
-
-GLuint vertexbuffer;
-GLuint uvbuffer;
-
-GLuint vertexPosition_modelspaceID;
-GLuint vertexUVID;
-GLuint programID;
-GLuint MatrixID;
+Model_OBJ obj;
  
 float rotationAngle = 0;
 
@@ -91,35 +79,13 @@ void initBMPTextures()
 
 void drawObjects()
 {
-    // 1rst attribute buffer : vertices
-        glEnableVertexAttribArray(vertexPosition_modelspaceID);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-            vertexPosition_modelspaceID,  // The attribute we want to configure
-            3,                            // size
-            GL_FLOAT,                     // type
-            GL_FALSE,                     // normalized?
-            0,                            // stride
-            (void*)0                      // array buffer offset
-        );
-
-        // 2nd attribute buffer : UVs
-        glEnableVertexAttribArray(vertexUVID);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-        glVertexAttribPointer(
-            vertexUVID,                   // The attribute we want to configure
-            2,                            // size : U+V => 2
-            GL_FLOAT,                     // type
-            GL_FALSE,                     // normalized?
-            0,                            // stride
-            (void*)0                      // array buffer offset
-        );
-
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
-
-        glDisableVertexAttribArray(vertexPosition_modelspaceID);
-        glDisableVertexAttribArray(vertexUVID);
-
+    //glLoadIdentity();
+    //glBegin(GL_QUADS);
+    glPushMatrix();
+    glScalef(3.0f, 3.0f, 3.0f);
+    obj.Draw();
+    glPopMatrix();
+    //glEnd();
 }
 
 // Draw the floor
@@ -212,21 +178,7 @@ void initRendering()
      
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    programID = LoadShaders( "TransformVertexShader.vertexshader", "TextureFragmentShader.fragmentshader" );
-    vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
-    vertexUVID = glGetAttribLocation(programID, "vertexUV");
-
-    MatrixID = glGetUniformLocation(programID, "MVP");
-
-    bool res = loadOBJ("Rack.obj", vertices, uvs, normals);
-
-    glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-
-    glGenBuffers(1, &uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+    obj.Load("cube.obj");   
 }
  
 void handleResize(int w, int h) 
@@ -241,18 +193,6 @@ void drawScene()
 {
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(programID);
-
-    // Compute the MVP matrix from keyboard and mouse input
-    computeMatricesFromInputs();
-    glm::mat4 ProjectionMatrix = getProjectionMatrix();
-    glm::mat4 ViewMatrix = getViewMatrix();
-    glm::mat4 ModelMatrix = glm::mat4(1.0);
-    glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-    // Send our transformation to the currently bound shader, 
-    // in the "MVP" uniform
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
      
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -264,18 +204,14 @@ void drawScene()
     GLfloat lightPosition[] = {0.0f, 10.0f, 0.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
     // Disable drawing colors
-    glColorMask(0, 0, 0, 0); 
-    // Disable depth testing
-    glDisable(GL_DEPTH_TEST);     
+    glColorMask(0, 0, 0, 0);   
     // Enable drawing colors to the screen
     glColorMask(1, 1, 1, 1); 
-    // Enable depth testing
-    glEnable(GL_DEPTH_TEST); 
     // Blend the floor onto the screen
     glEnable(GL_BLEND);    
     drawFloor(30.0f, 30.f, 0.8f);
     drawWalls(30.0f, 30.0f, 30.0f);
-    //drawObjects();
+    drawObjects();
     glDisable(GL_BLEND);
      
     glutSwapBuffers();    
