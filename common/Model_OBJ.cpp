@@ -166,7 +166,7 @@ void Model_OBJ::Draw()
 {
  	glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
  	glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
-	glVertexPointer(3,GL_FLOAT,	0,Faces_Triangles);				// Vertex Pointer to triangle array
+	glVertexPointer(3,GL_FLOAT,	0,Faces_Triangles);			// Vertex Pointer to triangle array
 	glNormalPointer(GL_FLOAT, 0, normals);						// Normal pointer to normal array
 	glDrawArrays(GL_TRIANGLES, 0, TotalConnectedTriangles);		// Draw the triangles
 	glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
