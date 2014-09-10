@@ -7,6 +7,7 @@
 #include "glm/glm.hpp"
 #include <iostream>
 #include <string>
+#include <random>
 #include "lib/EasyBMP.h"
 #include "common/Model_OBJ.hpp"
 #include "common/lesson13.h"
@@ -29,6 +30,7 @@ DirectoryMonitor directoryMonitor;
 int currentPos;
 std::vector<std::string> dirContent;
 std::string currentDir = "/", displayFile;
+std::vector<float> xs, zs;
  
 float rotationAngle = 0;
 
@@ -93,6 +95,8 @@ void enterToDir()
     {
         currentDir = currentDir.substr(0, (int) currentDir.find_last_of("/"));
         directoryMonitor.getDir(currentDir, dirContent);
+        xs.clear();
+        zs.clear();
 
         if(currentDir.compare("/") != 0)
         {
@@ -103,6 +107,8 @@ void enterToDir()
     {
         currentDir += "/" + dirContent[currentPos];
         directoryMonitor.getDir(currentDir, dirContent);
+        xs.clear();
+        zs.clear();
     }
 }
 
@@ -129,7 +135,7 @@ void changePos(int val)
 void drawObjects(float x, float y, float z)
 {
     glPushMatrix();
-    glScalef(3.0f, 3.0f, 3.0f);
+    //glScalef(3.0f, 3.0f, 3.0f);
     glTranslatef(x, y, z);
     obj.Draw();
     glPopMatrix();
@@ -273,9 +279,28 @@ void drawScene()
     drawFloor(30.0f, 30.f, 0.8f);
     drawWalls(30.0f, 30.0f, 30.0f);
     glDisable(GL_TEXTURE_2D);
-    drawObjects(-2.0f, 2.0f, 0.0f);
-    drawObjects(2.0f, 2.0f, 3.0f);
-    printf("currentPos: %d\n", currentPos);
+
+    if(xs.empty() || zs.empty())
+    {
+        for(int j=0; j<dirContent.size(); j++)
+        {
+            xs.push_back( (float) (0 + (rand() % (int)(28 - 0 + 1)) -14) );
+            zs.push_back( (float) (0 + (rand() % (int)(28 - 0 + 1)) -14) );
+        }
+    }
+
+    for(int i=0; i<dirContent.size(); i++)
+    {
+        if(currentPos == i)
+        {
+            drawObjects(xs[i], 10.0f, zs[i]);
+        }
+        else
+        {
+            drawObjects(xs[i], 2.0f, zs[i]);
+        }
+    }
+    //printf("currentPos: %d\n", currentPos);
     char *c = (char*) dirContent[currentPos].c_str();
     lesson.glPrint(c);
     glDisable(GL_BLEND);
