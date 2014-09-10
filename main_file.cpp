@@ -6,9 +6,11 @@
 #include <GL/glut.h>
 #include "glm/glm.hpp"
 #include <iostream>
+#include <string>
 #include "lib/EasyBMP.h"
 #include "common/Model_OBJ.hpp"
-#include "bitmapfonts/lesson13.h"
+#include "common/lesson13.h"
+#include "common/DirectoryMonitor.h"
 
 #define NUMBER_BMP_TEXTURES 2
 #define SKY_TEXTURE 0
@@ -21,7 +23,12 @@ GLubyte SkyTexture[SKY_TEXTURE_SIZE][SKY_TEXTURE_SIZE][3];
 GLubyte WallTexture[WALL_TEXTURE_SIZE][WALL_TEXTURE_SIZE][3];
 
 Model_OBJ obj;
-//lesson13 lesson;
+lesson13 lesson;
+
+DirectoryMonitor directoryMonitor;
+int currentPos;
+std::vector<std::string> dirContent;
+std::string currentDir = "/", displayFile;
  
 float rotationAngle = 0;
 
@@ -77,6 +84,32 @@ void initBMPTextures()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_2D);
+}
+
+void enterToDir()
+{
+    if(dirContent[currentPos].compare("../") == 0)
+    {
+        currentDir = currentDir.substr(0, (int) currentDir.find_last_of("/"));
+        directoryMonitor.getDir(currentDir, dirContent);
+
+        if(currentDir.compare("/") != 0)
+        {
+            dirContent.push_back("../");
+        }
+    }
+    else
+    {
+        currentDir += "/" + dirContent[currentPos];
+    }
+
+    directoryMonitor.getDir(currentDir, dirContent);
+}
+
+void changePos(int val)
+{
+    printf("val %d\n", val );
+    currentPos += val;
 }
 
 void drawObjects(float x, float y, float z)
@@ -147,11 +180,18 @@ void drawWalls(float width, float length, float height)
 // Handle keyboard input
 void handleKeyPress(unsigned char key, int x, int y) 
 {
+    printf("key %d\n", key);
+
     switch (key) 
     {
-        // Close on escape key
         case 27: 
             exit(0);
+        case 120:
+            changePos(1);
+        case 13:
+            enterToDir();
+        case 32:
+            enterToDir();
     }
 }
  
@@ -180,7 +220,9 @@ void initRendering()
     obj.Load("cube.obj");
 
     glShadeModel(GL_SMOOTH);
-    //lesson.BuildFont();   
+    lesson.BuildFont();
+
+    directoryMonitor.getDir("/", dirContent);
 }
  
 void handleResize(int w, int h) 
@@ -211,9 +253,12 @@ void drawScene()
     glEnable(GL_BLEND);    
     drawFloor(30.0f, 30.f, 0.8f);
     drawWalls(30.0f, 30.0f, 30.0f);
+    glDisable(GL_TEXTURE_2D);
     drawObjects(-2.0f, 2.0f, 0.0f);
     drawObjects(2.0f, 2.0f, 3.0f);
-    //lesson.glPrint();
+    printf("currentPos: %d\n", currentPos);
+    char *c = (char*) dirContent[currentPos].c_str();
+    lesson.glPrint(c);
     glDisable(GL_BLEND);
      
     glutSwapBuffers();    

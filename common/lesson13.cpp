@@ -79,6 +79,10 @@ void lesson13::glPrint(char *text)                      // custom gl print routi
 	return;
     }
     
+    glRasterPos2f(-0.2f+0.35f*((float)(cos(cnt1))), 0.35f*((float)(sin(cnt2))));
+    cnt1 += 0.01f;
+    cnt2 += 0.0081f;
+
     glPushAttrib(GL_LIST_BIT);                  // alert that we're about to offset the display lists with glListBase
     glListBase(base - 32);                      // sets the base character to 32.
 
@@ -162,54 +166,4 @@ void lesson13::keyPressed(unsigned char key, int x, int y)
     }
 }
 
-//int main()
-//{
-//  return 0;
-//}
-
-// //int main(int argc, char **argv) 
-// //{  
-//   /* Initialize GLUT state - glut will take any command line arguments that pertain to it or 
-//      X Windows - look at its documentation at http://reality.sgi.com/mjk/spec3/spec3.html */  
-//   //glutInit(&argc, argv);  
-
-//   /* Select type of Display mode:   
-//      Double buffer 
-//      RGBA color
-//      Alpha components supported 
-//      Depth buffer */  
-//   //glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);  
-
-//   /* get a 640 x 480 window */
-//   //glutInitWindowSize(640, 480);  
-
-//   /* the window starts at the upper left corner of the screen */
-//   glutInitWindowPosition(0, 0);  
-
-//   /* Open a window */  
-//   window = glutCreateWindow("Jeff Molofee's GL Code Tutorial ... NeHe '99");  
-
-//   /* Register the function to do all our OpenGL drawing. */
-//   glutDisplayFunc(&DrawGLScene);  
-
-//   /* Go fullscreen.  This is as soon as possible. */
-//   glutFullScreen();
-
-//   /* Even if there are no events, redraw our gl scene. */
-//   glutIdleFunc(&DrawGLScene);
-
-//   /* Register the function called when our window is resized. */
-//   glutReshapeFunc(&ReSizeGLScene);
-
-//   /* Register the function called when the keyboard is pressed. */
-//   glutKeyboardFunc(&keyPressed);
-
-//   /* Initialize our window. */
-//   InitGL(640, 480);
-
-//   /* Start Event Processing Engine */  
-//   glutMainLoop();  
-
-//   return 1;
-// }
 
