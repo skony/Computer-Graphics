@@ -88,6 +88,7 @@ void initBMPTextures()
 
 void enterToDir()
 {
+    printf("enter dir\n" );
     if(dirContent[currentPos].compare("../") == 0)
     {
         currentDir = currentDir.substr(0, (int) currentDir.find_last_of("/"));
@@ -101,15 +102,28 @@ void enterToDir()
     else
     {
         currentDir += "/" + dirContent[currentPos];
+        directoryMonitor.getDir(currentDir, dirContent);
     }
-
-    directoryMonitor.getDir(currentDir, dirContent);
 }
 
 void changePos(int val)
 {
-    printf("val %d\n", val );
-    currentPos += val;
+    if( (currentPos + val < dirContent.size()) && (val > 0) )
+    {
+        currentPos += val;
+    }
+    else if(val > 0)
+    {
+        currentPos = 0;
+    }
+    else if(currentPos == 0 && val < 0)
+    {
+        currentPos = dirContent.size() - 1;
+    }
+    else
+    {
+        currentPos += val;
+    }
 }
 
 void drawObjects(float x, float y, float z)
@@ -180,18 +194,23 @@ void drawWalls(float width, float length, float height)
 // Handle keyboard input
 void handleKeyPress(unsigned char key, int x, int y) 
 {
-    printf("key %d\n", key);
-
     switch (key) 
     {
         case 27: 
             exit(0);
+            break;
         case 120:
             changePos(1);
+            break;
+        case 122:
+            changePos(-1);
+            break;
         case 13:
             enterToDir();
+            break;
         case 32:
             enterToDir();
+            break;
     }
 }
  
