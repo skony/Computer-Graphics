@@ -79,9 +79,12 @@ void lesson13::glPrint(char *text)                      // custom gl print routi
 	return;
     }
     
-    glRasterPos2f(-0.2f+0.35f*((float)(cos(cnt1))), 0.35f*((float)(sin(cnt2))));
-    cnt1 += 0.01f;
-    cnt2 += 0.0081f;
+    //glRasterPos2f(-0.2f+0.35f*((float)(cos(cnt1))), 0.35f*((float)(sin(cnt2))));
+    glRasterPos3f(0.0f, 1.0f, 18.0f);
+    //cnt1 += 0.01f;
+    //cnt2 += 0.0081f;
+    cnt1 = 25.0f;
+    cnt2 = 25.0f;
 
     glPushAttrib(GL_LIST_BIT);                  // alert that we're about to offset the display lists with glListBase
     glListBase(base - 32);                      // sets the base character to 32.

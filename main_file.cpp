@@ -91,7 +91,7 @@ void initBMPTextures()
 void enterToDir()
 {
     printf("enter dir\n" );
-    if(dirContent[currentPos].compare("../") == 0)
+    if(dirContent[currentPos].compare("RETURN") == 0)
     {
         currentDir = currentDir.substr(0, (int) currentDir.find_last_of("/"));
         directoryMonitor.getDir(currentDir, dirContent);
@@ -100,13 +100,14 @@ void enterToDir()
 
         if(currentDir.compare("/") != 0)
         {
-            dirContent.push_back("../");
+            dirContent.push_back("RETURN");
         }
     }
     else
     {
         currentDir += "/" + dirContent[currentPos];
         directoryMonitor.getDir(currentDir, dirContent);
+        dirContent.push_back("RETURN");
         xs.clear();
         zs.clear();
     }
